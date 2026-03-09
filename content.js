@@ -4,27 +4,28 @@ let isActive = false;
 let currentElement = null;
 let overlay = null;
 let infoPanel = null;
+let marginOverlay = null;
+let paddingOverlay = null;
+let dimensionLabels = [];
+let marginLabels = [];
+let paddingLabels = [];
+let dimensionLines = [];
 
-// 初始化
 function init() {
   console.log('ScoutUI: 开始初始化...');
   try {
-    // 创建覆盖层
     createOverlay();
     console.log('ScoutUI: 覆盖层创建成功');
-    // 创建信息面板
+    createLayoutOverlays();
+    console.log('ScoutUI: 布局覆盖层创建成功');
     createInfoPanel();
     console.log('ScoutUI: 信息面板创建成功');
-    // 监听鼠标移动事件
     document.addEventListener('mousemove', throttle(handleMouseMove, 100));
     console.log('ScoutUI: 鼠标移动事件监听器已添加');
-    // 监听来自popup的消息
     chrome.runtime.onMessage.addListener(handleMessage);
     console.log('ScoutUI: 消息监听器已添加');
-    // 监听键盘事件，添加快捷键支持
     document.addEventListener('keydown', handleKeyDown);
     console.log('ScoutUI: 键盘事件监听器已添加');
-    // 检查初始状态
     chrome.storage.local.get('scoutUIActive', function(data) {
       try {
         isActive = data.scoutUIActive || false;
@@ -40,40 +41,75 @@ function init() {
   }
 }
 
-// 创建覆盖层
 function createOverlay() {
   overlay = document.createElement('div');
   overlay.id = 'scoutui-overlay';
   document.body.appendChild(overlay);
 }
 
-// 创建信息面板
+function createLayoutOverlays() {
+  marginOverlay = document.createElement('div');
+  marginOverlay.className = 'scoutui-margin-overlay';
+  document.body.appendChild(marginOverlay);
+  
+  paddingOverlay = document.createElement('div');
+  paddingOverlay.className = 'scoutui-padding-overlay';
+  document.body.appendChild(paddingOverlay);
+  
+  for (let i = 0; i < 2; i++) {
+    const label = document.createElement('div');
+    label.className = 'scoutui-dimension-label';
+    document.body.appendChild(label);
+    dimensionLabels.push(label);
+  }
+  
+  for (let i = 0; i < 4; i++) {
+    const label = document.createElement('div');
+    label.className = 'scoutui-margin-label';
+    document.body.appendChild(label);
+    marginLabels.push(label);
+  }
+  
+  for (let i = 0; i < 4; i++) {
+    const label = document.createElement('div');
+    label.className = 'scoutui-padding-label';
+    document.body.appendChild(label);
+    paddingLabels.push(label);
+  }
+  
+  for (let i = 0; i < 8; i++) {
+    const line = document.createElement('div');
+    line.className = 'scoutui-dimension-line';
+    document.body.appendChild(line);
+    dimensionLines.push(line);
+  }
+}
+
 function createInfoPanel() {
   infoPanel = document.createElement('div');
   infoPanel.id = 'scoutui-info-panel';
   document.body.appendChild(infoPanel);
 }
 
-// 元素信息缓存
 const elementCache = new Map();
 
-// 处理鼠标移动事件
 function handleMouseMove(e) {
   if (!isActive) return;
   
   try {
     const element = document.elementFromPoint(e.clientX, e.clientY);
-    if (element === currentElement || element === overlay || element === infoPanel) return;
+    if (element === currentElement || element === overlay || element === infoPanel || 
+        element === marginOverlay || element === paddingOverlay) return;
     
     currentElement = element;
     updateOverlay(element);
+    updateLayoutOverlays(element);
     updateInfoPanel(element, e.clientX, e.clientY);
   } catch (error) {
     console.error('ScoutUI: 处理鼠标移动事件失败:', error);
   }
 }
 
-// 更新覆盖层
 function updateOverlay(element) {
   try {
     const rect = element.getBoundingClientRect();
@@ -87,35 +123,145 @@ function updateOverlay(element) {
   }
 }
 
-// 更新信息面板
+function parseBoxValue(value) {
+  const parts = value.split(' ').map(v => parseFloat(v) || 0);
+  if (parts.length === 1) {
+    return { top: parts[0], right: parts[0], bottom: parts[0], left: parts[0] };
+  } else if (parts.length === 2) {
+    return { top: parts[0], right: parts[1], bottom: parts[0], left: parts[1] };
+  } else if (parts.length === 3) {
+    return { top: parts[0], right: parts[1], bottom: parts[2], left: parts[1] };
+  } else {
+    return { top: parts[0], right: parts[1], bottom: parts[2], left: parts[3] };
+  }
+}
+
+function updateLayoutOverlays(element) {
+  try {
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    
+    const margin = parseBoxValue(style.margin);
+    const padding = parseBoxValue(style.padding);
+    
+    const hasVisibleMargin = margin.top > 0 || margin.right > 0 || margin.bottom > 0 || margin.left > 0;
+    const hasVisiblePadding = padding.top > 0 || padding.right > 0 || padding.bottom > 0 || padding.left > 0;
+    
+    if (hasVisibleMargin) {
+      marginOverlay.style.left = (rect.left - margin.left) + 'px';
+      marginOverlay.style.top = (rect.top - margin.top) + 'px';
+      marginOverlay.style.width = (rect.width + margin.left + margin.right) + 'px';
+      marginOverlay.style.height = (rect.height + margin.top + margin.bottom) + 'px';
+      marginOverlay.style.display = 'block';
+    } else {
+      marginOverlay.style.display = 'none';
+    }
+    
+    if (hasVisiblePadding) {
+      paddingOverlay.style.left = rect.left + 'px';
+      paddingOverlay.style.top = rect.top + 'px';
+      paddingOverlay.style.width = rect.width + 'px';
+      paddingOverlay.style.height = rect.height + 'px';
+      paddingOverlay.style.display = 'block';
+    } else {
+      paddingOverlay.style.display = 'none';
+    }
+    
+    updateDimensionLabels(rect, dimensionLabels);
+    updateMarginLabels(rect, margin, marginLabels, hasVisibleMargin);
+    updatePaddingLabels(rect, padding, paddingLabels, hasVisiblePadding);
+    
+  } catch (error) {
+    console.error('ScoutUI: 更新布局覆盖层失败:', error);
+  }
+}
+
+function updateDimensionLabels(rect, labels) {
+  const widthLabel = labels[0];
+  const heightLabel = labels[1];
+  
+  widthLabel.textContent = `${Math.round(rect.width)}px`;
+  widthLabel.style.left = (rect.left + rect.width / 2 - widthLabel.offsetWidth / 2) + 'px';
+  widthLabel.style.top = (rect.top - 24) + 'px';
+  widthLabel.style.display = rect.width > 20 ? 'block' : 'none';
+  
+  heightLabel.textContent = `${Math.round(rect.height)}px`;
+  heightLabel.style.left = (rect.right + 8) + 'px';
+  heightLabel.style.top = (rect.top + rect.height / 2 - 8) + 'px';
+  heightLabel.style.display = rect.height > 20 ? 'block' : 'none';
+}
+
+function updateMarginLabels(rect, margin, labels, hasVisibleMargin) {
+  const positions = [
+    { value: margin.top, left: rect.left + rect.width / 2, top: rect.top - margin.top / 2, show: margin.top > 0 },
+    { value: margin.right, left: rect.right + margin.right / 2, top: rect.top + rect.height / 2, show: margin.right > 0 },
+    { value: margin.bottom, left: rect.left + rect.width / 2, top: rect.bottom + margin.bottom / 2, show: margin.bottom > 0 },
+    { value: margin.left, left: rect.left - margin.left / 2, top: rect.top + rect.height / 2, show: margin.left > 0 }
+  ];
+  
+  positions.forEach((pos, index) => {
+    const label = labels[index];
+    if (pos.show && hasVisibleMargin) {
+      label.textContent = `${Math.round(pos.value)}px`;
+      label.style.left = (pos.left - label.offsetWidth / 2) + 'px';
+      label.style.top = (pos.top - 8) + 'px';
+      label.style.display = 'block';
+    } else {
+      label.style.display = 'none';
+    }
+  });
+}
+
+function updatePaddingLabels(rect, padding, labels, hasVisiblePadding) {
+  const positions = [
+    { value: padding.top, left: rect.left + rect.width / 2, top: rect.top + padding.top / 2, show: padding.top > 0 },
+    { value: padding.right, left: rect.right - padding.right / 2, top: rect.top + rect.height / 2, show: padding.right > 0 },
+    { value: padding.bottom, left: rect.left + rect.width / 2, top: rect.bottom - padding.bottom / 2, show: padding.bottom > 0 },
+    { value: padding.left, left: rect.left + padding.left / 2, top: rect.top + rect.height / 2, show: padding.left > 0 }
+  ];
+  
+  positions.forEach((pos, index) => {
+    const label = labels[index];
+    if (pos.show && hasVisiblePadding) {
+      label.textContent = `${Math.round(pos.value)}px`;
+      label.style.left = (pos.left - label.offsetWidth / 2) + 'px';
+      label.style.top = (pos.top - 8) + 'px';
+      label.style.display = 'block';
+    } else {
+      label.style.display = 'none';
+    }
+  });
+}
+
 function updateInfoPanel(element, x, y) {
   try {
     const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
     
-    // 生成元素唯一标识
     const elementId = generateElementId(element, rect);
     
-    // 检查缓存
     let elementInfo = elementCache.get(elementId);
     
     if (!elementInfo) {
-      // 解析元素样式
-      const style = getComputedStyle(element);
+      const margin = parseBoxValue(style.margin);
+      const padding = parseBoxValue(style.padding);
+      
       elementInfo = {
         name: getElementName(element),
-        size: `${Math.round(rect.width)}px × ${Math.round(rect.height)}px`,
+        size: { width: Math.round(rect.width), height: Math.round(rect.height) },
         layout: getLayoutType(style),
         position: style.position,
-        margin: style.margin,
-        padding: style.padding,
+        margin: margin,
+        padding: padding,
         fontFamily: style.fontFamily,
         fontSize: style.fontSize,
         fontWeight: style.fontWeight,
         color: style.color,
-        backgroundColor: style.backgroundColor
+        backgroundColor: style.backgroundColor,
+        border: style.border,
+        borderRadius: style.borderRadius
       };
       
-      // 缓存元素信息（限制缓存大小）
       if (elementCache.size > 100) {
         const firstKey = elementCache.keys().next().value;
         elementCache.delete(firstKey);
@@ -123,67 +269,21 @@ function updateInfoPanel(element, x, y) {
       elementCache.set(elementId, elementInfo);
     }
     
-    const info = `
-      <h3>${elementInfo.name}</h3>
-      <div>
-        <strong>尺寸:</strong> <span class="scoutui-copyable">${elementInfo.size}</span>
-        <button class="scoutui-copy-btn" data-text="${elementInfo.size}">复制</button>
-      </div>
-      <div>
-        <strong>布局:</strong> <span class="scoutui-copyable">${elementInfo.layout}</span>
-        <button class="scoutui-copy-btn" data-text="${elementInfo.layout}">复制</button>
-      </div>
-      <div>
-        <strong>定位:</strong> <span class="scoutui-copyable">${elementInfo.position}</span>
-        <button class="scoutui-copy-btn" data-text="${elementInfo.position}">复制</button>
-      </div>
-      <div>
-        <strong>外边距:</strong> <span class="scoutui-copyable">${elementInfo.margin}</span>
-        <button class="scoutui-copy-btn" data-text="${elementInfo.margin}">复制</button>
-      </div>
-      <div>
-        <strong>内边距:</strong> <span class="scoutui-copyable">${elementInfo.padding}</span>
-        <button class="scoutui-copy-btn" data-text="${elementInfo.padding}">复制</button>
-      </div>
-      <div>
-        <strong>字体:</strong> <span class="scoutui-copyable">${elementInfo.fontFamily}</span>
-        <button class="scoutui-copy-btn" data-text="${elementInfo.fontFamily}">复制</button>
-      </div>
-      <div>
-        <strong>字号:</strong> <span class="scoutui-copyable">${elementInfo.fontSize}</span>
-        <button class="scoutui-copy-btn" data-text="${elementInfo.fontSize}">复制</button>
-      </div>
-      <div>
-        <strong>字重:</strong> <span class="scoutui-copyable">${elementInfo.fontWeight}</span>
-        <button class="scoutui-copy-btn" data-text="${elementInfo.fontWeight}">复制</button>
-      </div>
-      <div>
-        <strong>颜色:</strong> <span class="scoutui-copyable">${elementInfo.color}</span>
-        <button class="scoutui-copy-btn" data-text="${elementInfo.color}">复制</button>
-      </div>
-      <div>
-        <strong>背景:</strong> <span class="scoutui-copyable">${elementInfo.backgroundColor}</span>
-        <button class="scoutui-copy-btn" data-text="${elementInfo.backgroundColor}">复制</button>
-      </div>
-    `;
+    const info = generateInfoPanelHTML(elementInfo);
     
     infoPanel.innerHTML = info;
     
-    // 计算信息面板的位置，确保它不会超出视口范围
     let left = x + 10;
     let top = y + 10;
     
-    // 检查是否超出右侧视口
     if (left + infoPanel.offsetWidth > window.innerWidth) {
       left = x - infoPanel.offsetWidth - 10;
     }
     
-    // 检查是否超出底部视口
     if (top + infoPanel.offsetHeight > window.innerHeight) {
       top = y - infoPanel.offsetHeight - 10;
     }
     
-    // 确保面板不会超出左侧和顶部视口
     left = Math.max(10, left);
     top = Math.max(10, top);
     
@@ -191,28 +291,162 @@ function updateInfoPanel(element, x, y) {
     infoPanel.style.top = top + 'px';
     infoPanel.style.display = 'block';
     
-    // 添加复制按钮事件监听
-    const copyButtons = infoPanel.querySelectorAll('.scoutui-copy-btn');
-    copyButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        try {
-          const text = this.getAttribute('data-text');
-          copyToClipboard(text);
-          this.textContent = '已复制!';
-          setTimeout(() => {
-            this.textContent = '复制';
-          }, 1000);
-        } catch (error) {
-          console.error('ScoutUI: 复制操作失败:', error);
-        }
-      });
-    });
+    addCopyButtonListeners();
   } catch (error) {
     console.error('ScoutUI: 更新信息面板失败:', error);
   }
 }
 
-// 生成元素唯一标识
+function generateInfoPanelHTML(info) {
+  const marginStr = `${info.margin.top}px ${info.margin.right}px ${info.margin.bottom}px ${info.margin.left}px`;
+  const paddingStr = `${info.padding.top}px ${info.padding.right}px ${info.padding.bottom}px ${info.padding.left}px`;
+  
+  return `
+    <div class="scoutui-panel-header">
+      <h3>${info.name}</h3>
+    </div>
+    
+    <div class="scoutui-section">
+      <div class="scoutui-section-title">尺寸</div>
+      <div class="scoutui-size-display">
+        <div class="scoutui-size-item">
+          <span class="scoutui-size-value">${info.size.width}</span>
+          <span class="scoutui-size-unit">px</span>
+        </div>
+        <span class="scoutui-size-separator">×</span>
+        <div class="scoutui-size-item">
+          <span class="scoutui-size-value">${info.size.height}</span>
+          <span class="scoutui-size-unit">px</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="scoutui-section">
+      <div class="scoutui-section-title">布局</div>
+      <div class="scoutui-layout-info">
+        <div class="scoutui-info-row">
+          <span class="scoutui-info-label">Display</span>
+          <span class="scoutui-info-value scoutui-copyable">${info.layout}</span>
+          <button class="scoutui-copy-btn" data-text="${info.layout}">复制</button>
+        </div>
+        <div class="scoutui-info-row">
+          <span class="scoutui-info-label">Position</span>
+          <span class="scoutui-info-value scoutui-copyable">${info.position}</span>
+          <button class="scoutui-copy-btn" data-text="${info.position}">复制</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="scoutui-section">
+      <div class="scoutui-section-title">
+        <span class="scoutui-color-indicator" style="background: rgba(255, 158, 54, 0.3);"></span>
+        Margin
+      </div>
+      <div class="scoutui-box-model">
+        <div class="scoutui-box-row">
+          <span class="scoutui-box-label">上</span>
+          <span class="scoutui-box-value">${info.margin.top}px</span>
+        </div>
+        <div class="scoutui-box-row">
+          <span class="scoutui-box-label">右</span>
+          <span class="scoutui-box-value">${info.margin.right}px</span>
+        </div>
+        <div class="scoutui-box-row">
+          <span class="scoutui-box-label">下</span>
+          <span class="scoutui-box-value">${info.margin.bottom}px</span>
+        </div>
+        <div class="scoutui-box-row">
+          <span class="scoutui-box-label">左</span>
+          <span class="scoutui-box-value">${info.margin.left}px</span>
+        </div>
+      </div>
+      <button class="scoutui-copy-btn scoutui-copy-all" data-text="${marginStr}">复制全部</button>
+    </div>
+    
+    <div class="scoutui-section">
+      <div class="scoutui-section-title">
+        <span class="scoutui-color-indicator" style="background: rgba(76, 175, 80, 0.3);"></span>
+        Padding
+      </div>
+      <div class="scoutui-box-model">
+        <div class="scoutui-box-row">
+          <span class="scoutui-box-label">上</span>
+          <span class="scoutui-box-value">${info.padding.top}px</span>
+        </div>
+        <div class="scoutui-box-row">
+          <span class="scoutui-box-label">右</span>
+          <span class="scoutui-box-value">${info.padding.right}px</span>
+        </div>
+        <div class="scoutui-box-row">
+          <span class="scoutui-box-label">下</span>
+          <span class="scoutui-box-value">${info.padding.bottom}px</span>
+        </div>
+        <div class="scoutui-box-row">
+          <span class="scoutui-box-label">左</span>
+          <span class="scoutui-box-value">${info.padding.left}px</span>
+        </div>
+      </div>
+      <button class="scoutui-copy-btn scoutui-copy-all" data-text="${paddingStr}">复制全部</button>
+    </div>
+    
+    <div class="scoutui-section">
+      <div class="scoutui-section-title">字体</div>
+      <div class="scoutui-info-row">
+        <span class="scoutui-info-label">字体</span>
+        <span class="scoutui-info-value scoutui-copyable scoutui-font-preview" style="font-family: ${info.fontFamily}">${info.fontFamily.split(',')[0]}</span>
+        <button class="scoutui-copy-btn" data-text="${info.fontFamily}">复制</button>
+      </div>
+      <div class="scoutui-info-row">
+        <span class="scoutui-info-label">字号</span>
+        <span class="scoutui-info-value scoutui-copyable">${info.fontSize}</span>
+        <button class="scoutui-copy-btn" data-text="${info.fontSize}">复制</button>
+      </div>
+      <div class="scoutui-info-row">
+        <span class="scoutui-info-label">字重</span>
+        <span class="scoutui-info-value scoutui-copyable">${info.fontWeight}</span>
+        <button class="scoutui-copy-btn" data-text="${info.fontWeight}">复制</button>
+      </div>
+    </div>
+    
+    <div class="scoutui-section">
+      <div class="scoutui-section-title">颜色</div>
+      <div class="scoutui-info-row">
+        <span class="scoutui-info-label">文字</span>
+        <span class="scoutui-color-preview" style="background: ${info.color};"></span>
+        <span class="scoutui-info-value scoutui-copyable">${info.color}</span>
+        <button class="scoutui-copy-btn" data-text="${info.color}">复制</button>
+      </div>
+      <div class="scoutui-info-row">
+        <span class="scoutui-info-label">背景</span>
+        <span class="scoutui-color-preview" style="background: ${info.backgroundColor};"></span>
+        <span class="scoutui-info-value scoutui-copyable">${info.backgroundColor}</span>
+        <button class="scoutui-copy-btn" data-text="${info.backgroundColor}">复制</button>
+      </div>
+    </div>
+  `;
+}
+
+function addCopyButtonListeners() {
+  const copyButtons = infoPanel.querySelectorAll('.scoutui-copy-btn');
+  copyButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      try {
+        const text = this.getAttribute('data-text');
+        copyToClipboard(text);
+        const originalText = this.textContent;
+        this.textContent = '已复制!';
+        this.classList.add('scoutui-copied');
+        setTimeout(() => {
+          this.textContent = originalText;
+          this.classList.remove('scoutui-copied');
+        }, 1000);
+      } catch (error) {
+        console.error('ScoutUI: 复制操作失败:', error);
+      }
+    });
+  });
+}
+
 function generateElementId(element, rect) {
   let id = element.tagName.toLowerCase();
   if (element.id) {
@@ -224,12 +458,10 @@ function generateElementId(element, rect) {
       id += `.${classes}`;
     }
   }
-  // 添加位置和尺寸信息，确保同一元素在不同状态下的唯一性
   id += `_${Math.round(rect.left)}_${Math.round(rect.top)}_${Math.round(rect.width)}_${Math.round(rect.height)}`;
   return id;
 }
 
-// 复制到剪贴板
 function copyToClipboard(text) {
   try {
     navigator.clipboard.writeText(text).catch(err => {
@@ -240,7 +472,6 @@ function copyToClipboard(text) {
   }
 }
 
-// 获取元素名称
 function getElementName(element) {
   try {
     let name = element.tagName.toLowerCase();
@@ -260,7 +491,6 @@ function getElementName(element) {
   }
 }
 
-// 获取布局类型
 function getLayoutType(style) {
   try {
     const display = style.display;
@@ -278,13 +508,11 @@ function getLayoutType(style) {
   }
 }
 
-// 处理来自popup的消息
 function handleMessage(message) {
   try {
     if (message.action === 'toggle-scan') {
       isActive = message.active;
       updateOverlayVisibility();
-      // 保存状态到本地存储
       chrome.storage.local.set({ scoutUIActive: isActive });
     }
   } catch (error) {
@@ -292,15 +520,12 @@ function handleMessage(message) {
   }
 }
 
-// 处理键盘事件
 function handleKeyDown(e) {
   try {
-    // Alt+Shift+S 快捷键切换走查模式
     if (e.altKey && e.shiftKey && e.key === 'S') {
       e.preventDefault();
       isActive = !isActive;
       updateOverlayVisibility();
-      // 保存状态到本地存储
       chrome.storage.local.set({ scoutUIActive: isActive });
     }
   } catch (error) {
@@ -308,7 +533,6 @@ function handleKeyDown(e) {
   }
 }
 
-// 更新覆盖层可见性
 function updateOverlayVisibility() {
   try {
     if (isActive) {
@@ -317,6 +541,12 @@ function updateOverlayVisibility() {
     } else {
       overlay.style.display = 'none';
       infoPanel.style.display = 'none';
+      marginOverlay.style.display = 'none';
+      paddingOverlay.style.display = 'none';
+      dimensionLabels.forEach(label => label.style.display = 'none');
+      marginLabels.forEach(label => label.style.display = 'none');
+      paddingLabels.forEach(label => label.style.display = 'none');
+      dimensionLines.forEach(line => line.style.display = 'none');
       currentElement = null;
     }
   } catch (error) {
@@ -324,7 +554,6 @@ function updateOverlayVisibility() {
   }
 }
 
-// 节流函数
 function throttle(func, delay) {
   try {
     let lastCall = 0;
@@ -346,5 +575,4 @@ function throttle(func, delay) {
   }
 }
 
-// 初始化插件
 init();

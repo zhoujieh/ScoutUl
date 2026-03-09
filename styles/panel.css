@@ -1,57 +1,209 @@
-/* 信息展示面板样式 */
+/* 信息展示面板样式 - Figma 风格 */
 #scoutui-info-panel {
   position: fixed;
   pointer-events: auto;
   z-index: 9999;
   background-color: #fff;
-  border: 1px solid #ddd;
+  border: 1px solid #e5e5e5;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 16px;
-  max-width: 300px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 0;
+  max-width: 280px;
+  min-width: 240px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   font-size: 12px;
   line-height: 1.4;
   color: #333;
   display: none;
+  overflow: hidden;
 }
 
-#scoutui-info-panel h3 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
+.scoutui-panel-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid #e5e5e5;
+  background: #fafafa;
+}
+
+.scoutui-panel-header h3 {
+  margin: 0;
+  font-size: 13px;
   font-weight: 600;
+  color: #1a1a1a;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace;
+  word-break: break-all;
 }
 
-#scoutui-info-panel div {
+.scoutui-section {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.scoutui-section:last-child {
+  border-bottom: none;
+}
+
+.scoutui-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scoutui-color-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.scoutui-size-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.scoutui-size-item {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.scoutui-size-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0D99FF;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+}
+
+.scoutui-size-unit {
+  font-size: 11px;
+  color: #666;
+  font-weight: 400;
+}
+
+.scoutui-size-separator {
+  color: #999;
+  font-weight: 300;
+}
+
+.scoutui-layout-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scoutui-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.scoutui-info-label {
+  font-size: 11px;
+  color: #666;
+  min-width: 50px;
+  font-weight: 500;
+}
+
+.scoutui-info-value {
+  flex: 1;
+  font-size: 12px;
+  color: #333;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  word-break: break-all;
+}
+
+.scoutui-box-model {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
   margin-bottom: 8px;
 }
 
-#scoutui-info-panel strong {
-  display: inline-block;
-  width: 70px;
-  font-weight: 500;
-  color: #666;
-}
-
-#scoutui-info-panel .scoutui-copyable {
-  margin-right: 8px;
-  font-family: 'Courier New', Courier, monospace;
-}
-
-#scoutui-info-panel .scoutui-copy-btn {
-  background-color: #f0f0f0;
-  border: 1px solid #ddd;
+.scoutui-box-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  background: #f8f9fa;
   border-radius: 4px;
-  padding: 2px 6px;
+}
+
+.scoutui-box-label {
+  font-size: 11px;
+  color: #666;
+  font-weight: 500;
+}
+
+.scoutui-box-value {
+  font-size: 12px;
+  color: #333;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  font-weight: 500;
+}
+
+.scoutui-color-preview {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.scoutui-font-preview {
+  font-size: 12px !important;
+}
+
+.scoutui-copy-btn {
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 3px 8px;
   font-size: 10px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.15s ease;
+  color: #666;
+  white-space: nowrap;
 }
 
-#scoutui-info-panel .scoutui-copy-btn:hover {
-  background-color: #e0e0e0;
+.scoutui-copy-btn:hover {
+  background-color: #e8e8e8;
+  border-color: #d0d0d0;
+  color: #333;
 }
 
-#scoutui-info-panel .scoutui-copy-btn:active {
-  background-color: #d0d0d0;
+.scoutui-copy-btn:active {
+  background-color: #ddd;
+}
+
+.scoutui-copy-btn.scoutui-copied {
+  background-color: #0D99FF;
+  border-color: #0D99FF;
+  color: white;
+}
+
+.scoutui-copy-all {
+  width: 100%;
+  margin-top: 4px;
+  padding: 6px 12px;
+  font-size: 11px;
+}
+
+.scoutui-copyable {
+  cursor: text;
+  user-select: text;
+}
+
+#scoutui-info-panel * {
+  box-sizing: border-box;
 }
