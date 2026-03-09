@@ -82,123 +82,123 @@ function updateOverlay(element) {
 // 更新信息面板
 function updateInfoPanel(element, x, y) {
   try {
-  const rect = element.getBoundingClientRect();
-  
-  // 生成元素唯一标识
-  const elementId = generateElementId(element, rect);
-  
-  // 检查缓存
-  let elementInfo = elementCache.get(elementId);
-  
-  if (!elementInfo) {
-    // 解析元素样式
-    const style = getComputedStyle(element);
-    elementInfo = {
-      name: getElementName(element),
-      size: `${Math.round(rect.width)}px × ${Math.round(rect.height)}px`,
-      layout: getLayoutType(style),
-      position: style.position,
-      margin: style.margin,
-      padding: style.padding,
-      fontFamily: style.fontFamily,
-      fontSize: style.fontSize,
-      fontWeight: style.fontWeight,
-      color: style.color,
-      backgroundColor: style.backgroundColor
-    };
+    const rect = element.getBoundingClientRect();
     
-    // 缓存元素信息（限制缓存大小）
-    if (elementCache.size > 100) {
-      const firstKey = elementCache.keys().next().value;
-      elementCache.delete(firstKey);
-    }
-    elementCache.set(elementId, elementInfo);
-  }
-  
-  const info = `
-    <h3>${elementInfo.name}</h3>
-    <div>
-      <strong>尺寸:</strong> <span class="scoutui-copyable">${elementInfo.size}</span>
-      <button class="scoutui-copy-btn" data-text="${elementInfo.size}">复制</button>
-    </div>
-    <div>
-      <strong>布局:</strong> <span class="scoutui-copyable">${elementInfo.layout}</span>
-      <button class="scoutui-copy-btn" data-text="${elementInfo.layout}">复制</button>
-    </div>
-    <div>
-      <strong>定位:</strong> <span class="scoutui-copyable">${elementInfo.position}</span>
-      <button class="scoutui-copy-btn" data-text="${elementInfo.position}">复制</button>
-    </div>
-    <div>
-      <strong>外边距:</strong> <span class="scoutui-copyable">${elementInfo.margin}</span>
-      <button class="scoutui-copy-btn" data-text="${elementInfo.margin}">复制</button>
-    </div>
-    <div>
-      <strong>内边距:</strong> <span class="scoutui-copyable">${elementInfo.padding}</span>
-      <button class="scoutui-copy-btn" data-text="${elementInfo.padding}">复制</button>
-    </div>
-    <div>
-      <strong>字体:</strong> <span class="scoutui-copyable">${elementInfo.fontFamily}</span>
-      <button class="scoutui-copy-btn" data-text="${elementInfo.fontFamily}">复制</button>
-    </div>
-    <div>
-      <strong>字号:</strong> <span class="scoutui-copyable">${elementInfo.fontSize}</span>
-      <button class="scoutui-copy-btn" data-text="${elementInfo.fontSize}">复制</button>
-    </div>
-    <div>
-      <strong>字重:</strong> <span class="scoutui-copyable">${elementInfo.fontWeight}</span>
-      <button class="scoutui-copy-btn" data-text="${elementInfo.fontWeight}">复制</button>
-    </div>
-    <div>
-      <strong>颜色:</strong> <span class="scoutui-copyable">${elementInfo.color}</span>
-      <button class="scoutui-copy-btn" data-text="${elementInfo.color}">复制</button>
-    </div>
-    <div>
-      <strong>背景:</strong> <span class="scoutui-copyable">${elementInfo.backgroundColor}</span>
-      <button class="scoutui-copy-btn" data-text="${elementInfo.backgroundColor}">复制</button>
-    </div>
-  `;
-  
-  infoPanel.innerHTML = info;
-  
-  // 计算信息面板的位置，确保它不会超出视口范围
-  let left = x + 10;
-  let top = y + 10;
-  
-  // 检查是否超出右侧视口
-  if (left + infoPanel.offsetWidth > window.innerWidth) {
-    left = x - infoPanel.offsetWidth - 10;
-  }
-  
-  // 检查是否超出底部视口
-  if (top + infoPanel.offsetHeight > window.innerHeight) {
-    top = y - infoPanel.offsetHeight - 10;
-  }
-  
-  // 确保面板不会超出左侧和顶部视口
-  left = Math.max(10, left);
-  top = Math.max(10, top);
-  
-  infoPanel.style.left = left + 'px';
-  infoPanel.style.top = top + 'px';
-  infoPanel.style.display = 'block';
-  
-  // 添加复制按钮事件监听
-  const copyButtons = infoPanel.querySelectorAll('.scoutui-copy-btn');
-  copyButtons.forEach(button => {
-    button.addEventListener('click', function() {
-      try {
-        const text = this.getAttribute('data-text');
-        copyToClipboard(text);
-        this.textContent = '已复制!';
-        setTimeout(() => {
-          this.textContent = '复制';
-        }, 1000);
-      } catch (error) {
-        console.error('ScoutUI: 复制操作失败:', error);
+    // 生成元素唯一标识
+    const elementId = generateElementId(element, rect);
+    
+    // 检查缓存
+    let elementInfo = elementCache.get(elementId);
+    
+    if (!elementInfo) {
+      // 解析元素样式
+      const style = getComputedStyle(element);
+      elementInfo = {
+        name: getElementName(element),
+        size: `${Math.round(rect.width)}px × ${Math.round(rect.height)}px`,
+        layout: getLayoutType(style),
+        position: style.position,
+        margin: style.margin,
+        padding: style.padding,
+        fontFamily: style.fontFamily,
+        fontSize: style.fontSize,
+        fontWeight: style.fontWeight,
+        color: style.color,
+        backgroundColor: style.backgroundColor
+      };
+      
+      // 缓存元素信息（限制缓存大小）
+      if (elementCache.size > 100) {
+        const firstKey = elementCache.keys().next().value;
+        elementCache.delete(firstKey);
       }
+      elementCache.set(elementId, elementInfo);
+    }
+    
+    const info = `
+      <h3>${elementInfo.name}</h3>
+      <div>
+        <strong>尺寸:</strong> <span class="scoutui-copyable">${elementInfo.size}</span>
+        <button class="scoutui-copy-btn" data-text="${elementInfo.size}">复制</button>
+      </div>
+      <div>
+        <strong>布局:</strong> <span class="scoutui-copyable">${elementInfo.layout}</span>
+        <button class="scoutui-copy-btn" data-text="${elementInfo.layout}">复制</button>
+      </div>
+      <div>
+        <strong>定位:</strong> <span class="scoutui-copyable">${elementInfo.position}</span>
+        <button class="scoutui-copy-btn" data-text="${elementInfo.position}">复制</button>
+      </div>
+      <div>
+        <strong>外边距:</strong> <span class="scoutui-copyable">${elementInfo.margin}</span>
+        <button class="scoutui-copy-btn" data-text="${elementInfo.margin}">复制</button>
+      </div>
+      <div>
+        <strong>内边距:</strong> <span class="scoutui-copyable">${elementInfo.padding}</span>
+        <button class="scoutui-copy-btn" data-text="${elementInfo.padding}">复制</button>
+      </div>
+      <div>
+        <strong>字体:</strong> <span class="scoutui-copyable">${elementInfo.fontFamily}</span>
+        <button class="scoutui-copy-btn" data-text="${elementInfo.fontFamily}">复制</button>
+      </div>
+      <div>
+        <strong>字号:</strong> <span class="scoutui-copyable">${elementInfo.fontSize}</span>
+        <button class="scoutui-copy-btn" data-text="${elementInfo.fontSize}">复制</button>
+      </div>
+      <div>
+        <strong>字重:</strong> <span class="scoutui-copyable">${elementInfo.fontWeight}</span>
+        <button class="scoutui-copy-btn" data-text="${elementInfo.fontWeight}">复制</button>
+      </div>
+      <div>
+        <strong>颜色:</strong> <span class="scoutui-copyable">${elementInfo.color}</span>
+        <button class="scoutui-copy-btn" data-text="${elementInfo.color}">复制</button>
+      </div>
+      <div>
+        <strong>背景:</strong> <span class="scoutui-copyable">${elementInfo.backgroundColor}</span>
+        <button class="scoutui-copy-btn" data-text="${elementInfo.backgroundColor}">复制</button>
+      </div>
+    `;
+    
+    infoPanel.innerHTML = info;
+    
+    // 计算信息面板的位置，确保它不会超出视口范围
+    let left = x + 10;
+    let top = y + 10;
+    
+    // 检查是否超出右侧视口
+    if (left + infoPanel.offsetWidth > window.innerWidth) {
+      left = x - infoPanel.offsetWidth - 10;
+    }
+    
+    // 检查是否超出底部视口
+    if (top + infoPanel.offsetHeight > window.innerHeight) {
+      top = y - infoPanel.offsetHeight - 10;
+    }
+    
+    // 确保面板不会超出左侧和顶部视口
+    left = Math.max(10, left);
+    top = Math.max(10, top);
+    
+    infoPanel.style.left = left + 'px';
+    infoPanel.style.top = top + 'px';
+    infoPanel.style.display = 'block';
+    
+    // 添加复制按钮事件监听
+    const copyButtons = infoPanel.querySelectorAll('.scoutui-copy-btn');
+    copyButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        try {
+          const text = this.getAttribute('data-text');
+          copyToClipboard(text);
+          this.textContent = '已复制!';
+          setTimeout(() => {
+            this.textContent = '复制';
+          }, 1000);
+        } catch (error) {
+          console.error('ScoutUI: 复制操作失败:', error);
+        }
+      });
     });
-  });
   } catch (error) {
     console.error('ScoutUI: 更新信息面板失败:', error);
   }
