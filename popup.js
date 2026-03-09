@@ -16,7 +16,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // 向当前活动标签页发送消息
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
       if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, { action: 'toggle-scan', active: isActive });
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'toggle-scan', active: isActive }, function(response) {
+          // 忽略消息传递失败的错误
+          if (chrome.runtime.lastError) {
+            console.log('ScoutUI: 消息传递失败，内容脚本可能未加载:', chrome.runtime.lastError.message);
+          }
+        });
       }
     });
   });

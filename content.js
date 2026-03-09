@@ -7,22 +7,30 @@ let infoPanel = null;
 
 // 初始化
 function init() {
+  console.log('ScoutUI: 开始初始化...');
   try {
     // 创建覆盖层
     createOverlay();
+    console.log('ScoutUI: 覆盖层创建成功');
     // 创建信息面板
     createInfoPanel();
+    console.log('ScoutUI: 信息面板创建成功');
     // 监听鼠标移动事件
     document.addEventListener('mousemove', throttle(handleMouseMove, 100));
+    console.log('ScoutUI: 鼠标移动事件监听器已添加');
     // 监听来自popup的消息
     chrome.runtime.onMessage.addListener(handleMessage);
+    console.log('ScoutUI: 消息监听器已添加');
     // 监听键盘事件，添加快捷键支持
     document.addEventListener('keydown', handleKeyDown);
+    console.log('ScoutUI: 键盘事件监听器已添加');
     // 检查初始状态
     chrome.storage.local.get('scoutUIActive', function(data) {
       try {
         isActive = data.scoutUIActive || false;
+        console.log('ScoutUI: 初始状态:', isActive);
         updateOverlayVisibility();
+        console.log('ScoutUI: 初始化完成');
       } catch (error) {
         console.error('ScoutUI: 初始化状态失败:', error);
       }
@@ -276,6 +284,8 @@ function handleMessage(message) {
     if (message.action === 'toggle-scan') {
       isActive = message.active;
       updateOverlayVisibility();
+      // 保存状态到本地存储
+      chrome.storage.local.set({ scoutUIActive: isActive });
     }
   } catch (error) {
     console.error('ScoutUI: 处理消息失败:', error);
