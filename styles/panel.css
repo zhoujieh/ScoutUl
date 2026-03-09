@@ -1,0 +1,57 @@
+/* 信息展示面板样式 */
+#scoutui-info-panel {
+  position: fixed;
+  pointer-events: auto;
+  z-index: 9999;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 16px;
+  max-width: 300px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #333;
+  display: none;
+}
+
+#scoutui-info-panel h3 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#scoutui-info-panel div {
+  margin-bottom: 8px;
+}
+
+#scoutui-info-panel strong {
+  display: inline-block;
+  width: 70px;
+  font-weight: 500;
+  color: #666;
+}
+
+#scoutui-info-panel .scoutui-copyable {
+  margin-right: 8px;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+#scoutui-info-panel .scoutui-copy-btn {
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+#scoutui-info-panel .scoutui-copy-btn:hover {
+  background-color: #e0e0e0;
+}
+
+#scoutui-info-panel .scoutui-copy-btn:active {
+  background-color: #d0d0d0;
+}

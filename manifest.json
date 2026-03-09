@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "ScoutUI - UI自动走查工具",
+  "version": "1.0.0",
+  "description": "当鼠标悬停在网页元素上时，自动检测并显示该元素的布局、间距、尺寸、定位、字体和颜色等UI属性",
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": [
+    "activeTab",
+    "scripting"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles/overlay.css", "styles/panel.css"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
