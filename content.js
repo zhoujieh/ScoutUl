@@ -514,10 +514,12 @@ function handleMessage(message) {
       isActive = message.active;
       updateOverlayVisibility();
       chrome.storage.local.set({ scoutUIActive: isActive });
+      console.log('ScoutUI: 状态切换为', isActive);
     }
   } catch (error) {
     console.error('ScoutUI: 处理消息失败:', error);
   }
+  return true;
 }
 
 function handleKeyDown(e) {
